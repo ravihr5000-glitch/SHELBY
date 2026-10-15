@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-heading: 'Rajdhani', sans-serif;
+    --font-tech: 'Chakra Petch', sans-serif;
+    --font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #050608;
+    color: #fef3c7;
+    overflow: hidden;
+  }
+}
+
+/* Custom sleek scrollbar for cyber panels */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(10, 12, 16, 0.8);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.25);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 158, 11, 0.5);
+}
+
+/* Cyber HUD Borders & Glows */
+.hud-border {
+  border: 1px solid rgba(245, 158, 11, 0.18);
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.04), inset 0 0 15px rgba(245, 158, 11, 0.02);
+}
+
+.hud-border-active {
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.12), inset 0 0 12px rgba(245, 158, 11, 0.05);
+}
+
+.hud-panel {
+  background: rgba(12, 14, 20, 0.92);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+}
+
+.glow-amber-text {
+  text-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+}
+
+.glow-amber-box {
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.25);
+}
+
+.font-tech {
+  font-family: 'Chakra Petch', sans-serif;
+}
+
+.font-heading {
+  font-family: 'Rajdhani', sans-serif;
+}
+
+.font-mono-code {
+  font-family: 'JetBrains Mono', monospace;
+}

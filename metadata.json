@@ -1,0 +1,6 @@
+{
+  "name": "SHELBY — Next-Gen AI Assistant",
+  "description": "Futuristic Gemini-powered personal AI assistant featuring a genuine animated 3D orbital energy core, multilingual voice interaction, real-time system HUD, multi-step task execution, and Windows desktop companion bridge.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
