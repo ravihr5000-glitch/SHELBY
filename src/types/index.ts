@@ -115,6 +115,22 @@ export interface SmartNotification {
   actionLabel?: string;
 }
 
+export type VadStatus = 'silence' | 'noise' | 'speech';
+
+export interface VoiceMetrics {
+  vadStatus: VadStatus;
+  audioLevel: number;
+  noiseFloor: number;
+  speechConfidence: number;
+  noiseSuppressionActive: boolean;
+  echoCancellationActive: boolean;
+  autoGainControlActive: boolean;
+  activeInputLang: string;
+  recoveryCount: number;
+  isListening: boolean;
+  isMuted: boolean;
+}
+
 export interface ShelbySettings {
   language: LanguageMode;
   voiceAccent: 'Indian English' | 'Hindi Native' | 'British Neutral' | 'American Tech';
@@ -123,6 +139,11 @@ export interface ShelbySettings {
   ttsVolume: number;
   wakeWordEnabled: boolean;
   wakeWordSensitivity: 'low' | 'medium' | 'high';
+  micSensitivity: 'low' | 'medium' | 'high';
+  noiseSuppression: boolean;
+  echoCancellation: boolean;
+  autoGainControl: boolean;
+  silenceTimeoutMs: number;
   memoryCollectionPaused: boolean;
   morningBriefingEnabled: boolean;
   morningBriefingTime: string;

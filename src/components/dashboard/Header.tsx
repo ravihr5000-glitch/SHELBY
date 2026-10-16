@@ -7,10 +7,9 @@ import {
   Square,
   ShieldAlert,
   ShieldCheck,
-  Radio,
   PanelLeft,
 } from 'lucide-react';
-import { AssistantState } from '../../types';
+import { AssistantState, VoiceMetrics } from '../../types';
 
 interface HeaderProps {
   assistantState: AssistantState;
@@ -25,6 +24,7 @@ interface HeaderProps {
   onToggleWakeWord: () => void;
   isSidebarVisible: boolean;
   onToggleSidebar: () => void;
+  voiceMetrics?: VoiceMetrics;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -40,6 +40,7 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleWakeWord,
   isSidebarVisible,
   onToggleSidebar,
+  voiceMetrics,
 }) => {
   const [timeStr, setTimeStr] = useState<string>('');
 
@@ -64,7 +65,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="h-16 bg-[#080a0e]/95 border-b border-amber-500/15 px-6 flex items-center justify-between z-10 select-none">
-      {/* Left: Menu toggle when sidebar hidden, and Wake Word indicator */}
+      {/* Left: Menu toggle when sidebar hidden */}
       <div className="flex items-center space-x-4">
         {!isSidebarVisible && (
           <button
@@ -76,23 +77,6 @@ export const Header: React.FC<HeaderProps> = ({
             <span>MENU</span>
           </button>
         )}
-
-        {/* Wake Word indicator */}
-        <div
-          onClick={onToggleWakeWord}
-          className={`cursor-pointer flex items-center space-x-1.5 px-2.5 py-1 rounded text-xs font-mono-code transition-all border ${
-            wakeWordEnabled
-              ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
-              : 'bg-black/40 border-stone-800 text-stone-500'
-          }`}
-          title="Click to toggle hands-free 'Hey Shelby' wake-word detection"
-        >
-          <Radio className="w-3.5 h-3.5 text-amber-400" />
-          <span>WAKE: &quot;Hey Shelby&quot;</span>
-          <span className="text-[9px] uppercase font-bold text-amber-400">
-            [{wakeWordEnabled ? 'ON' : 'OFF'}]
-          </span>
-        </div>
       </div>
 
       {/* Right: Audio controls, Interruption, Companion status, Time */}
@@ -136,10 +120,10 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={onToggleMute}
           className={`flex items-center space-x-1.5 px-3 py-1.5 rounded text-xs font-mono-code transition-all border ${
             isMuted
-              ? 'bg-rose-950/40 border-rose-500/40 text-rose-300 hover:bg-rose-900/50'
-              : 'bg-amber-500/10 border-amber-500/40 text-amber-300 hover:bg-amber-500/20'
+              ? 'bg-rose-950/60 border-rose-500/60 text-rose-300 hover:bg-rose-900/60'
+              : 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20'
           }`}
-          title={isMuted ? 'Microphone is Muted (Click to Unmute)' : 'Microphone is Active'}
+          title={isMuted ? 'Microphone is MUTED (Click to Unmute)' : 'Microphone is ACTIVE (Click to Mute)'}
         >
           {isMuted ? (
             <>
@@ -149,7 +133,7 @@ export const Header: React.FC<HeaderProps> = ({
           ) : (
             <>
               <Mic className="w-3.5 h-3.5 text-amber-400" />
-              <span>MIC LIVE</span>
+              <span>MIC</span>
             </>
           )}
         </button>

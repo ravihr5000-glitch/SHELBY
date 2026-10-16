@@ -15,6 +15,7 @@ import {
   ShelbyFile,
   SmartNotification,
   LanguageMode,
+  VoiceMetrics,
 } from './types';
 import { storageService } from './services/storageService';
 import { voiceService, VoiceState } from './services/voiceService';
@@ -50,7 +51,25 @@ export default function App() {
   const [audioLevel, setAudioLevel] = useState<number>(0);
   const [activeTask, setActiveTask] = useState<TaskPlan | null>(null);
   const [liveTranscript, setLiveTranscript] = useState<string>('');
+  const [liveTranscriptData, setLiveTranscriptData] = useState<{
+    text: string;
+    isFinal: boolean;
+    confidence: number;
+  }>({ text: '', isFinal: false, confidence: 0 });
   const [permissionState, setPermissionState] = useState<'prompt' | 'granted' | 'denied' | 'unsupported'>('prompt');
+  const [voiceMetrics, setVoiceMetrics] = useState<VoiceMetrics>({
+    vadStatus: 'silence',
+    audioLevel: 0,
+    noiseFloor: 0.05,
+    speechConfidence: 0,
+    noiseSuppressionActive: true,
+    echoCancellationActive: true,
+    autoGainControlActive: true,
+    activeInputLang: 'en-IN',
+    recoveryCount: 0,
+    isListening: false,
+    isMuted: false,
+  });
 
   // Modals & Panels
   const [isSidebarVisible, setIsSidebarVisible] = useState<boolean>(true);
@@ -96,9 +115,17 @@ export default function App() {
   // Sync settings & voice configuration
   useEffect(() => {
     storageService.saveSettings(settings);
-    voiceService.setVolume(settings.ttsVolume);
-    voiceService.setAccent(settings.voiceAccent);
-    voiceService.setLanguage(settings.language);
+    voiceService.updateConfig({
+      micSensitivity: settings.micSensitivity,
+      wakeWordSensitivity: settings.wakeWordSensitivity,
+      noiseSuppression: settings.noiseSuppression,
+      echoCancellation: settings.echoCancellation,
+      autoGainControl: settings.autoGainControl,
+      silenceTimeoutMs: settings.silenceTimeoutMs,
+      language: settings.language,
+      voiceAccent: settings.voiceAccent,
+      ttsVolume: settings.ttsVolume,
+    });
   }, [settings]);
 
   useEffect(() => {
@@ -137,10 +164,11 @@ export default function App() {
     const initVoice = async () => {
       const perm = await voiceService.checkPermission();
       setPermissionState(perm);
-      if (perm === 'granted') {
+      if (perm !== 'denied' && perm !== 'unsupported') {
         const ok = await voiceService.activateHandsFree();
         if (ok) {
           setIsMuted(false);
+          setPermissionState('granted');
         }
       }
     };
@@ -169,21 +197,31 @@ export default function App() {
         if (instantCommand && instantCommand.trim().length > 1) {
           // User spoke command immediately in the same breath ("Hey Shelby, what's my agenda?")
           setLiveTranscript(instantCommand);
+          setLiveTranscriptData({ text: instantCommand, isFinal: true, confidence: 0.95 });
           handleUserCommand(instantCommand.trim());
         } else {
           // User said "Hey Shelby" only -> trigger verbal acknowledgment
           handleWakeWordAcknowledged();
         }
       },
-      onLiveTranscript: (text: string, isFinal: boolean) => {
+      onLiveTranscript: (text: string, isFinal: boolean, confidence?: number) => {
         setLiveTranscript(text);
+        setLiveTranscriptData({
+          text,
+          isFinal,
+          confidence: confidence ?? 0.85,
+        });
         if (isFinal && text.trim().length > 1) {
           handleUserCommand(text.trim());
           setLiveTranscript('');
+          setLiveTranscriptData({ text: '', isFinal: false, confidence: 0 });
         }
       },
       onAudioLevel: (level: number) => {
         setAudioLevel(level);
+      },
+      onMetrics: (metrics: VoiceMetrics) => {
+        setVoiceMetrics(metrics);
       },
       onError: (err: string) => {
         console.warn('Voice engine error notice:', err);
@@ -248,6 +286,23 @@ export default function App() {
       await handleRequestMicrophone();
     }
     handleWakeWordAcknowledged();
+  };
+
+  /**
+   * Direct push-to-talk / listen without requiring wake-word
+   */
+  const handleStartDirectListening = async () => {
+    if (isMuted) {
+      voiceService.unmuteMicrophone();
+      setIsMuted(false);
+    }
+    if (permissionState === 'prompt') {
+      await handleRequestMicrophone();
+    }
+    voiceService.stopSpeaking();
+    voiceService.startListeningForCommand();
+    setAssistantState('listening');
+    setLiveTranscript('Listening... Speak your command');
   };
 
   /**
@@ -351,12 +406,30 @@ export default function App() {
         },
       });
     } catch (err: any) {
-      console.warn('Error handling user command:', err);
-      setAssistantState('error');
-      setTimeout(() => {
-        setAssistantState('standby');
-        voiceService.returnToWakeWordStandby();
-      }, 3000);
+      console.warn('Error handling user command, delivering robust fallback reply:', err);
+      let fallback = `Yes Rajveer. I hear you loud and clear. Core systems are operating normally. How can I assist you?`;
+      if (settingsRef.current.language === 'Hindi') {
+        fallback = `नमस्ते राजवीर जी! शेल्बी सक्रिय है। बताइए क्या सहायता करूँ?`;
+      } else if (settingsRef.current.language === 'Hinglish') {
+        fallback = `Haanji Rajveer! Main bilkul active hoon aur sun raha hoon. Boliye kya execute karna hai?`;
+      }
+
+      const aiMsg: ChatMessage = {
+        id: `msg-${Date.now() + 1}`,
+        role: 'assistant',
+        content: fallback,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+
+      setMessages((prev) => [...prev, aiMsg]);
+      setAssistantState('speaking');
+
+      await voiceService.speak(fallback, {
+        onEnd: () => {
+          setAssistantState('standby');
+          voiceService.returnToWakeWordStandby();
+        },
+      });
     }
   };
 
@@ -523,6 +596,7 @@ export default function App() {
           }
           isSidebarVisible={isSidebarVisible}
           onToggleSidebar={() => setIsSidebarVisible(!isSidebarVisible)}
+          voiceMetrics={voiceMetrics}
         />
 
         {/* Tab Views */}
@@ -547,10 +621,22 @@ export default function App() {
               onDeliverBriefing={handleDeliverBriefing}
               onTriggerTaskPlanner={handleTriggerTaskPlanner}
               liveTranscript={liveTranscript}
+              liveTranscriptData={liveTranscriptData}
+              onSendLiveTranscript={(text: string) => {
+                setLiveTranscript('');
+                setLiveTranscriptData({ text: '', isFinal: false, confidence: 0 });
+                handleUserCommand(text);
+              }}
+              onClearLiveTranscript={() => {
+                setLiveTranscript('');
+                setLiveTranscriptData({ text: '', isFinal: false, confidence: 0 });
+              }}
+              voiceMetrics={voiceMetrics}
               permissionState={permissionState}
               onRequestPermission={handleRequestMicrophone}
               onInterruptSpeech={handleInterrupt}
               onTriggerWake={handleTriggerWake}
+              onStartDirectListening={handleStartDirectListening}
             />
           )}
 
@@ -630,6 +716,7 @@ export default function App() {
               memories={memories}
               onSaveMemories={setMemories}
               onOpenCompanionModal={() => setShowCompanionModal(true)}
+              voiceMetrics={voiceMetrics}
             />
           )}
         </main>

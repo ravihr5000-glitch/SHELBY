@@ -17,8 +17,11 @@ import {
   Sparkles,
   Sliders,
   ExternalLink,
+  Activity,
+  CheckCircle,
+  Cpu,
 } from 'lucide-react';
-import { ShelbySettings, MemoryItem, LanguageMode } from '../../types';
+import { ShelbySettings, MemoryItem, LanguageMode, VoiceMetrics } from '../../types';
 
 interface SettingsViewProps {
   settings: ShelbySettings;
@@ -26,6 +29,7 @@ interface SettingsViewProps {
   memories: MemoryItem[];
   onSaveMemories: (m: MemoryItem[]) => void;
   onOpenCompanionModal: () => void;
+  voiceMetrics?: VoiceMetrics;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -34,6 +38,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   memories,
   onSaveMemories,
   onOpenCompanionModal,
+  voiceMetrics,
 }) => {
   const [activeTab, setActiveTab] = useState<'voice' | 'memory' | 'privacy' | 'companion' | 'display'>('voice');
   const [editingMemoryId, setEditingMemoryId] = useState<string | null>(null);
@@ -143,7 +148,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 Voice & Multilingual Configuration
               </h3>
               <p className="font-mono-code text-xs text-amber-500/70 mt-1">
-                Configure vocal acoustics, Indian English accent priority, and wake-word sensitivity.
+                Optimized audio DSP pipeline for low-end laptops with hardware noise suppression and multilingual recognition.
               </p>
             </div>
 
@@ -167,6 +172,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   </button>
                 ))}
               </div>
+              <p className="text-[10px] font-mono-code text-amber-500/50">
+                Indian English handles both tech English and fluent Hinglish code-switching seamlessly.
+              </p>
             </div>
 
             {/* Voice Accent */}
@@ -186,7 +194,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </select>
             </div>
 
-            {/* Independent Spoken Volume Slider */}
+            {/* Independent Spoken Volume Slider (with safety note) */}
             <div className="p-4 rounded-xl bg-black/50 border border-amber-500/20 space-y-3">
               <div className="flex items-center justify-between text-xs font-mono-code text-amber-400">
                 <span className="font-bold">SHELBY Spoken-Response Volume (Independent)</span>
@@ -202,7 +210,137 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 className="w-full h-1.5 accent-amber-400 cursor-pointer"
               />
               <p className="text-[10px] font-mono-code text-amber-500/50">
-                Adjusts SHELBY spoken vocal volume without altering computer master volume.
+                Controls SHELBY spoken vocal volume independently. Master volume is never automatically increased without limits.
+              </p>
+            </div>
+
+            {/* Microphone Sensitivity & Voice Activity Detection (VAD) */}
+            <div className="p-4 rounded-xl bg-black/50 border border-amber-500/20 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="text-xs font-mono-code text-amber-400 font-bold block">
+                    Microphone Sensitivity & VAD Threshold
+                  </label>
+                  <p className="text-[10px] font-mono-code text-amber-500/60 mt-0.5">
+                    Tunes vocal energy threshold above background laptop fan noise and typing.
+                  </p>
+                </div>
+                <span className="text-xs font-mono-code uppercase px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                  {settings.micSensitivity}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  {
+                    id: 'low',
+                    label: 'Low',
+                    desc: 'High Fan / Noisy Room',
+                  },
+                  {
+                    id: 'medium',
+                    label: 'Medium',
+                    desc: 'Balanced / Standard (Recommended)',
+                  },
+                  {
+                    id: 'high',
+                    label: 'High',
+                    desc: 'Quiet Room / Soft Voice',
+                  },
+                ].map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => handleUpdate({ micSensitivity: s.id as any })}
+                    className={`p-2 rounded border font-mono-code text-xs text-left transition-all ${
+                      settings.micSensitivity === s.id
+                        ? 'bg-amber-500/20 border-amber-400 text-amber-300 font-bold'
+                        : 'bg-black/40 border-amber-500/15 text-amber-100/60 hover:text-amber-200'
+                    }`}
+                  >
+                    <div className="font-bold">{s.label}</div>
+                    <div className="text-[9px] text-amber-500/70 mt-0.5">{s.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Browser Hardware Audio DSP Processing */}
+            <div className="p-4 rounded-xl bg-black/50 border border-amber-500/20 space-y-4">
+              <h4 className="font-tech font-bold text-xs text-amber-300 uppercase tracking-wider">
+                Hardware Audio DSP & Noise Mitigation
+              </h4>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-mono-code text-amber-200 block font-bold">
+                      Browser Noise Suppression
+                    </span>
+                    <span className="text-[10px] font-mono-code text-amber-500/60">
+                      Suppresses continuous laptop cooling fan hum and keyboard chatter at driver level.
+                    </span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={settings.noiseSuppression}
+                    onChange={(e) => handleUpdate({ noiseSuppression: e.target.checked })}
+                    className="w-4 h-4 accent-amber-400 cursor-pointer"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between border-t border-amber-500/10 pt-2.5">
+                  <div>
+                    <span className="text-xs font-mono-code text-amber-200 block font-bold">
+                      Acoustic Echo Cancellation
+                    </span>
+                    <span className="text-[10px] font-mono-code text-amber-500/60">
+                      Prevents SHELBY&apos;s spoken responses from feeding back into the laptop microphone.
+                    </span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={settings.echoCancellation}
+                    onChange={(e) => handleUpdate({ echoCancellation: e.target.checked })}
+                    className="w-4 h-4 accent-amber-400 cursor-pointer"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between border-t border-amber-500/10 pt-2.5">
+                  <div>
+                    <span className="text-xs font-mono-code text-amber-200 block font-bold">
+                      Automatic Gain Control (Clamped Safe Limit)
+                    </span>
+                    <span className="text-[10px] font-mono-code text-amber-500/60">
+                      Smooths quiet speech with a safe ceiling limiter (prevents volume spikes).
+                    </span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={settings.autoGainControl}
+                    onChange={(e) => handleUpdate({ autoGainControl: e.target.checked })}
+                    className="w-4 h-4 accent-amber-400 cursor-pointer"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Silence Detection Timeout */}
+            <div className="p-4 rounded-xl bg-black/50 border border-amber-500/20 space-y-3">
+              <div className="flex items-center justify-between text-xs font-mono-code text-amber-400">
+                <span className="font-bold">Silence Detection Timeout (Command Finalizer)</span>
+                <span>{(settings.silenceTimeoutMs / 1000).toFixed(1)}s</span>
+              </div>
+              <input
+                type="range"
+                min="800"
+                max="3000"
+                step="100"
+                value={settings.silenceTimeoutMs}
+                onChange={(e) => handleUpdate({ silenceTimeoutMs: parseInt(e.target.value, 10) })}
+                className="w-full h-1.5 accent-amber-400 cursor-pointer"
+              />
+              <p className="text-[10px] font-mono-code text-amber-500/50">
+                Duration of silence required before interim speech is automatically finalized and dispatched to Gemini.
               </p>
             </div>
 
@@ -214,7 +352,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     Continuous Hands-Free Wake Phrase (&quot;Hey Shelby&quot;)
                   </h4>
                   <p className="text-[10px] font-mono-code text-amber-500/60 mt-0.5">
-                    Stage 1 uses browser Web Speech API. Stage 2 provides background Windows OS listening.
+                    Multilingual phonetics supporting English, Hindi, and Hinglish greetings with automatic recovery watchdog.
                   </p>
                 </div>
                 <input
@@ -223,6 +361,68 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   onChange={(e) => handleUpdate({ wakeWordEnabled: e.target.checked })}
                   className="w-4 h-4 accent-amber-400 cursor-pointer"
                 />
+              </div>
+            </div>
+
+            {/* Live Audio & DSP Hardware Diagnostic HUD */}
+            <div className="p-4 rounded-xl bg-black/70 border border-amber-500/30 space-y-3 font-mono-code text-xs">
+              <div className="flex items-center justify-between text-amber-400 pb-2 border-b border-amber-500/15">
+                <span className="font-bold flex items-center gap-1.5">
+                  <Activity className="w-4 h-4 text-amber-400" />
+                  <span>LIVE AUDIO DSP TELEMETRY</span>
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                  DIAGNOSTIC ACTIVE
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-[11px]">
+                <div className="p-2.5 rounded bg-black/60 border border-amber-500/15 space-y-1">
+                  <span className="text-[10px] text-amber-500/60 uppercase">VAD Status</span>
+                  <div
+                    className={`font-bold uppercase ${
+                      voiceMetrics?.vadStatus === 'speech'
+                        ? 'text-amber-300'
+                        : voiceMetrics?.vadStatus === 'noise'
+                          ? 'text-yellow-400'
+                          : 'text-stone-400'
+                    }`}
+                  >
+                    {voiceMetrics?.vadStatus || 'STANDBY'}
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded bg-black/60 border border-amber-500/15 space-y-1">
+                  <span className="text-[10px] text-amber-500/60 uppercase">Ambient Noise Floor</span>
+                  <div className="font-bold text-amber-200">
+                    {Math.round((voiceMetrics?.noiseFloor || 0.05) * 100)}% (Adaptive)
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded bg-black/60 border border-amber-500/15 space-y-1">
+                  <span className="text-[10px] text-amber-500/60 uppercase">Active Recognition Language</span>
+                  <div className="font-bold text-amber-200">
+                    {voiceMetrics?.activeInputLang || 'en-IN'}
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded bg-black/60 border border-amber-500/15 space-y-1">
+                  <span className="text-[10px] text-amber-500/60 uppercase">Watchdog Auto-Heals</span>
+                  <div className="font-bold text-emerald-400">
+                    {voiceMetrics?.recoveryCount || 0} Restarts
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-[10px] text-amber-500/70 pt-1 space-y-1">
+                <div className="flex items-center gap-1">
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>DSP Chain: Highpass 85Hz &rarr; Lowpass 7.2kHz &rarr; Dynamics Compressor &rarr; Analyser (64 bins)</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Safe Gain Ceiled: Max 1.15x gain (no runaway volume elevation)</span>
+                </div>
               </div>
             </div>
           </div>
