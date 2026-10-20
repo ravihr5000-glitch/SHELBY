@@ -49,6 +49,7 @@ export default function App() {
   const [assistantState, setAssistantState] = useState<AssistantState>('standby');
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [audioLevel, setAudioLevel] = useState<number>(0);
+  const [coreVisualMode, setCoreVisualMode] = useState<'orbit' | 'face'>('orbit');
   const [activeTask, setActiveTask] = useState<TaskPlan | null>(null);
   const [liveTranscript, setLiveTranscript] = useState<string>('');
   const [liveTranscriptData, setLiveTranscriptData] = useState<{
@@ -597,6 +598,10 @@ export default function App() {
           isSidebarVisible={isSidebarVisible}
           onToggleSidebar={() => setIsSidebarVisible(!isSidebarVisible)}
           voiceMetrics={voiceMetrics}
+          coreVisualMode={coreVisualMode}
+          onToggleCoreMode={() =>
+            setCoreVisualMode((prev) => (prev === 'orbit' ? 'face' : 'orbit'))
+          }
         />
 
         {/* Tab Views */}
@@ -637,6 +642,10 @@ export default function App() {
               onInterruptSpeech={handleInterrupt}
               onTriggerWake={handleTriggerWake}
               onStartDirectListening={handleStartDirectListening}
+              coreVisualMode={coreVisualMode}
+              onToggleCoreMode={() =>
+                setCoreVisualMode((prev) => (prev === 'orbit' ? 'face' : 'orbit'))
+              }
             />
           )}
 
@@ -732,6 +741,10 @@ export default function App() {
         onToggleMute={handleToggleMute}
         lastTranscript={liveTranscript}
         reducedMotion={settings.reducedMotion}
+        coreVisualMode={coreVisualMode}
+        onToggleCoreMode={() =>
+          setCoreVisualMode((prev) => (prev === 'orbit' ? 'face' : 'orbit'))
+        }
       />
 
       {/* Windows Companion Bridge Modal */}

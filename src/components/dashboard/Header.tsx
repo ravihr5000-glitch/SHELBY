@@ -8,6 +8,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   PanelLeft,
+  ScanFace,
 } from 'lucide-react';
 import { AssistantState, VoiceMetrics } from '../../types';
 
@@ -25,6 +26,8 @@ interface HeaderProps {
   isSidebarVisible: boolean;
   onToggleSidebar: () => void;
   voiceMetrics?: VoiceMetrics;
+  coreVisualMode?: 'orbit' | 'face';
+  onToggleCoreMode?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -41,6 +44,8 @@ export const Header: React.FC<HeaderProps> = ({
   isSidebarVisible,
   onToggleSidebar,
   voiceMetrics,
+  coreVisualMode = 'orbit',
+  onToggleCoreMode,
 }) => {
   const [timeStr, setTimeStr] = useState<string>('');
 
@@ -65,18 +70,40 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="h-16 bg-[#080a0e]/95 border-b border-amber-500/15 px-6 flex items-center justify-between z-10 select-none">
-      {/* Left: Menu toggle when sidebar hidden */}
-      <div className="flex items-center space-x-4">
-        {!isSidebarVisible && (
-          <button
-            onClick={onToggleSidebar}
-            className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-tech text-xs tracking-wider transition-all"
-            title="Open Menu Bar"
-          >
-            <PanelLeft className="w-4 h-4 text-amber-400" />
-            <span>MENU</span>
-          </button>
-        )}
+      {/* Left: Menu icon and Face icon side-by-side */}
+      <div className="flex items-center space-x-2.5">
+        <button
+          onClick={onToggleSidebar}
+          className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg border font-tech text-xs tracking-wider transition-all ${
+            !isSidebarVisible
+              ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
+              : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30'
+          }`}
+          title={isSidebarVisible ? 'Collapse Sidebar Menu' : 'Open Sidebar Menu'}
+        >
+          <PanelLeft className="w-4 h-4 text-amber-400" />
+          <span>MENU</span>
+        </button>
+
+        {/* Face Icon at the right side of menu icon */}
+        <button
+          onClick={onToggleCoreMode}
+          className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg border font-tech text-xs tracking-wider transition-all ${
+            coreVisualMode === 'face'
+              ? 'bg-amber-500 text-black font-bold border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.5)] ring-1 ring-amber-300'
+              : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30'
+          }`}
+          title={
+            coreVisualMode === 'face'
+              ? 'Click to switch back to 3D Orbital Energy Core'
+              : 'Click to transform Orbit into Holographic Face Structure'
+          }
+        >
+          <ScanFace className={`w-4 h-4 ${coreVisualMode === 'face' ? 'text-black' : 'text-amber-400 animate-pulse'}`} />
+          <span className="hidden sm:inline">
+            {coreVisualMode === 'face' ? 'FACE CORE' : 'FACE'}
+          </span>
+        </button>
       </div>
 
       {/* Right: Audio controls, Interruption, Companion status, Time */}

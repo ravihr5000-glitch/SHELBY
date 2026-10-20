@@ -16,6 +16,7 @@ import {
   RotateCcw,
   Sliders,
   Cpu,
+  ScanFace,
 } from 'lucide-react';
 import {
   AssistantState,
@@ -27,6 +28,7 @@ import {
   VoiceMetrics,
 } from '../../types';
 import { Shelby3DCore } from '../three/Shelby3DCore';
+import { HoloAvatar } from '../three/HoloAvatar';
 
 interface HomeViewProps {
   state: AssistantState;
@@ -53,6 +55,8 @@ interface HomeViewProps {
   onInterruptSpeech: () => void;
   onTriggerWake: () => void;
   onStartDirectListening?: () => void;
+  coreVisualMode?: 'orbit' | 'face';
+  onToggleCoreMode?: () => void;
 }
 
 export const HomeView: React.FC<HomeViewProps> = ({
@@ -78,6 +82,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
   onInterruptSpeech,
   onTriggerWake,
   onStartDirectListening,
+  coreVisualMode = 'orbit',
+  onToggleCoreMode,
 }) => {
   const [inputText, setInputText] = useState('');
   const [editingTranscript, setEditingTranscript] = useState<string | null>(null);
@@ -360,20 +366,61 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
         {/* 3D Core Viewport */}
         <div className="relative w-full flex-1 max-h-[520px] flex flex-col items-center justify-center">
-          <div className="relative w-full flex-1 flex items-center justify-center cursor-pointer" title="Click Shelby's Core to Talk">
-            <Shelby3DCore
-              state={state}
-              audioLevel={audioLevel}
-              reducedMotion={reducedMotion}
-              compactMode={false}
-              onCoreClick={() => {
-                if (onStartDirectListening) {
-                  onStartDirectListening();
-                } else {
-                  onTriggerWake();
-                }
-              }}
-            />
+          {/* Quick HUD indicator for Core Visual Mode */}
+          {onToggleCoreMode && (
+            <div className="absolute top-2 right-4 z-10">
+              <button
+                onClick={onToggleCoreMode}
+                className="px-2.5 py-1 rounded bg-black/80 hover:bg-amber-500/20 border border-amber-500/30 text-[10px] font-mono-code text-amber-300 flex items-center space-x-1.5 transition-all shadow-[0_0_10px_rgba(245,158,11,0.1)] hover:border-amber-400"
+                title="Toggle between 3D Orbital Energy Core and Holographic Face Structure"
+              >
+                <ScanFace className="w-3 h-3 text-amber-400" />
+                <span>CORE: {coreVisualMode === 'face' ? 'HOLO FACE' : '3D ORBIT'}</span>
+              </button>
+            </div>
+          )}
+
+          <div
+            className="relative w-full flex-1 flex items-center justify-center cursor-pointer overflow-hidden"
+            title="Click Shelby's Core to Talk"
+          >
+            {coreVisualMode === 'face' ? (
+              <div className="w-full h-full flex items-center justify-center relative animate-in fade-in zoom-in-95 duration-300">
+                <HoloAvatar
+                  primaryColor="#f59e0b"
+                  accentColor="#fef08a"
+                  backgroundColor="transparent"
+                  state={state}
+                  isSpeaking={state === 'speaking'}
+                  isMuted={isMuted}
+                  audioLevel={audioLevel}
+                  className="w-full h-full min-h-[380px] max-w-[540px]"
+                  onClick={() => {
+                    if (onStartDirectListening) {
+                      onStartDirectListening();
+                    } else {
+                      onTriggerWake();
+                    }
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center relative animate-in fade-in zoom-in-95 duration-300">
+                <Shelby3DCore
+                  state={state}
+                  audioLevel={audioLevel}
+                  reducedMotion={reducedMotion}
+                  compactMode={false}
+                  onCoreClick={() => {
+                    if (onStartDirectListening) {
+                      onStartDirectListening();
+                    } else {
+                      onTriggerWake();
+                    }
+                  }}
+                />
+              </div>
+            )}
           </div>
 
           {/* Direct Push-to-Talk / Voice Interaction Button */}

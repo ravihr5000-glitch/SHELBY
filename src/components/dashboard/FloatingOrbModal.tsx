@@ -1,7 +1,7 @@
-import React from 'react';
-import { X, Mic, MicOff, Maximize2, Radio } from 'lucide-react';
+import { X, Mic, MicOff, Maximize2, Radio, ScanFace } from 'lucide-react';
 import { AssistantState } from '../../types';
 import { Shelby3DCore } from '../three/Shelby3DCore';
+import { HoloAvatar } from '../three/HoloAvatar';
 
 interface FloatingOrbModalProps {
   isOpen: boolean;
@@ -12,6 +12,8 @@ interface FloatingOrbModalProps {
   onToggleMute: () => void;
   lastTranscript?: string;
   reducedMotion: boolean;
+  coreVisualMode?: 'orbit' | 'face';
+  onToggleCoreMode?: () => void;
 }
 
 export const FloatingOrbModal: React.FC<FloatingOrbModalProps> = ({
@@ -23,6 +25,8 @@ export const FloatingOrbModal: React.FC<FloatingOrbModalProps> = ({
   onToggleMute,
   lastTranscript,
   reducedMotion,
+  coreVisualMode = 'orbit',
+  onToggleCoreMode,
 }) => {
   if (!isOpen) return null;
 
@@ -39,6 +43,19 @@ export const FloatingOrbModal: React.FC<FloatingOrbModalProps> = ({
           </div>
 
           <div className="flex items-center space-x-1">
+            {onToggleCoreMode && (
+              <button
+                onClick={onToggleCoreMode}
+                className={`p-1 rounded transition-colors ${
+                  coreVisualMode === 'face'
+                    ? 'text-amber-300 bg-amber-500/20'
+                    : 'text-amber-500/60 hover:text-amber-300'
+                }`}
+                title={coreVisualMode === 'face' ? 'Switch to Orbit Core' : 'Morph to Holographic Face'}
+              >
+                <ScanFace className="w-3.5 h-3.5" />
+              </button>
+            )}
             <button
               onClick={onClose}
               className="p-1 rounded text-amber-500/60 hover:text-amber-300 transition-colors"
@@ -56,15 +73,29 @@ export const FloatingOrbModal: React.FC<FloatingOrbModalProps> = ({
           </div>
         </div>
 
-        {/* Mini 3D Core */}
+        {/* Mini 3D Core or Holo Face */}
         <div className="flex-1 w-full relative flex items-center justify-center overflow-hidden">
-          <Shelby3DCore
-            state={state}
-            audioLevel={audioLevel}
-            reducedMotion={reducedMotion}
-            compactMode={true}
-            onCoreClick={onToggleMute}
-          />
+          {coreVisualMode === 'face' ? (
+            <HoloAvatar
+              primaryColor="#f59e0b"
+              accentColor="#fef08a"
+              backgroundColor="transparent"
+              state={state}
+              isSpeaking={state === 'speaking'}
+              isMuted={isMuted}
+              audioLevel={audioLevel}
+              className="w-full h-full min-h-[220px]"
+              onClick={onToggleMute}
+            />
+          ) : (
+            <Shelby3DCore
+              state={state}
+              audioLevel={audioLevel}
+              reducedMotion={reducedMotion}
+              compactMode={true}
+              onCoreClick={onToggleMute}
+            />
+          )}
         </div>
 
         {/* Floating Mini Transcript / Response */}
